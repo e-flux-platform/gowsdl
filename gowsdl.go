@@ -288,20 +288,27 @@ func (g *GoWSDL) resolveXSDExternals(schema *XSDSchema, loc *Location) error {
 
 func (g *GoWSDL) genTypes() ([]byte, error) {
 	funcMap := template.FuncMap{
-		"toGoType":                 toGoType,
-		"stripns":                  stripns,
-		"replaceReservedWords":     replaceReservedWords,
-		"replaceAttrReservedWords": replaceAttrReservedWords,
-		"normalize":                normalize,
-		"makePublic":               g.makePublicFn,
-		"makeFieldPublic":          makePublic,
-		"comment":                  comment,
-		"removeNS":                 removeNS,
-		"goString":                 goString,
-		"findNameByType":           g.findNameByType,
-		"removePointerFromType":    removePointerFromType,
-		"setNS":                    g.setNS,
-		"getNS":                    g.getNS,
+		"toGoType":                  toGoType,
+		"stripns":                   stripns,
+		"replaceReservedWords":      replaceReservedWords,
+		"replaceAttrReservedWords":  replaceAttrReservedWords,
+		"normalize":                 normalize,
+		"makePublic":                g.makePublicFn,
+		"makeFieldPublic":           makePublic,
+		"comment":                   comment,
+		"removeNS":                  removeNS,
+		"goString":                  goString,
+		"findNameByType":            g.findNameByType,
+		"removePointerFromType":     removePointerFromType,
+		"setNS":                     g.setNS,
+		"getNS":                     g.getNS,
+		"replaceNonIdentifierChars": replaceNonIdentifierChars,
+		"typeXmlName": func(x string) string {
+			if strings.HasSuffix(x, "Request") {
+				return fmt.Sprintf(`ns:%s`, x)
+			}
+			return x
+		},
 	}
 
 	data := new(bytes.Buffer)
@@ -316,15 +323,16 @@ func (g *GoWSDL) genTypes() ([]byte, error) {
 
 func (g *GoWSDL) genOperations() ([]byte, error) {
 	funcMap := template.FuncMap{
-		"toGoType":             toGoType,
-		"stripns":              stripns,
-		"replaceReservedWords": replaceReservedWords,
-		"normalize":            normalize,
-		"makePublic":           g.makePublicFn,
-		"makePrivate":          makePrivate,
-		"findType":             g.findType,
-		"findSOAPAction":       g.findSOAPAction,
-		"findServiceAddress":   g.findServiceAddress,
+		"toGoType":                  toGoType,
+		"stripns":                   stripns,
+		"replaceReservedWords":      replaceReservedWords,
+		"normalize":                 normalize,
+		"makePublic":                g.makePublicFn,
+		"makePrivate":               makePrivate,
+		"findType":                  g.findType,
+		"findSOAPAction":            g.findSOAPAction,
+		"findServiceAddress":        g.findServiceAddress,
+		"replaceNonIdentifierChars": replaceNonIdentifierChars,
 	}
 
 	data := new(bytes.Buffer)
@@ -339,13 +347,14 @@ func (g *GoWSDL) genOperations() ([]byte, error) {
 
 func (g *GoWSDL) genServer() ([]byte, error) {
 	funcMap := template.FuncMap{
-		"toGoType":             toGoType,
-		"stripns":              stripns,
-		"replaceReservedWords": replaceReservedWords,
-		"makePublic":           g.makePublicFn,
-		"findType":             g.findType,
-		"findSOAPAction":       g.findSOAPAction,
-		"findServiceAddress":   g.findServiceAddress,
+		"toGoType":                  toGoType,
+		"stripns":                   stripns,
+		"replaceReservedWords":      replaceReservedWords,
+		"makePublic":                g.makePublicFn,
+		"findType":                  g.findType,
+		"findSOAPAction":            g.findSOAPAction,
+		"findServiceAddress":        g.findServiceAddress,
+		"replaceNonIdentifierChars": replaceNonIdentifierChars,
 	}
 
 	data := new(bytes.Buffer)
@@ -360,13 +369,14 @@ func (g *GoWSDL) genServer() ([]byte, error) {
 
 func (g *GoWSDL) genHeader() ([]byte, error) {
 	funcMap := template.FuncMap{
-		"toGoType":             toGoType,
-		"stripns":              stripns,
-		"replaceReservedWords": replaceReservedWords,
-		"normalize":            normalize,
-		"makePublic":           g.makePublicFn,
-		"findType":             g.findType,
-		"comment":              comment,
+		"toGoType":                  toGoType,
+		"stripns":                   stripns,
+		"replaceReservedWords":      replaceReservedWords,
+		"normalize":                 normalize,
+		"makePublic":                g.makePublicFn,
+		"findType":                  g.findType,
+		"comment":                   comment,
+		"replaceNonIdentifierChars": replaceNonIdentifierChars,
 	}
 
 	data := new(bytes.Buffer)
@@ -381,12 +391,13 @@ func (g *GoWSDL) genHeader() ([]byte, error) {
 
 func (g *GoWSDL) genServerHeader() ([]byte, error) {
 	funcMap := template.FuncMap{
-		"toGoType":             toGoType,
-		"stripns":              stripns,
-		"replaceReservedWords": replaceReservedWords,
-		"makePublic":           g.makePublicFn,
-		"findType":             g.findType,
-		"comment":              comment,
+		"toGoType":                  toGoType,
+		"stripns":                   stripns,
+		"replaceReservedWords":      replaceReservedWords,
+		"makePublic":                g.makePublicFn,
+		"findType":                  g.findType,
+		"comment":                   comment,
+		"replaceNonIdentifierChars": replaceNonIdentifierChars,
 	}
 
 	data := new(bytes.Buffer)
@@ -617,6 +628,7 @@ func (g *GoWSDL) findNameByType(name string) string {
 // TODO(c4milo): Add support for namespaces instead of striping them out
 // TODO(c4milo): improve runtime complexity if performance turns out to be an issue.
 func (g *GoWSDL) findSOAPAction(operation, portType string) string {
+	return fmt.Sprintf("http://ochp.eu/1.4/%s", operation)
 	for _, binding := range g.wsdl.Binding {
 		if strings.ToUpper(stripns(binding.Type)) != strings.ToUpper(portType) {
 			continue
@@ -628,7 +640,7 @@ func (g *GoWSDL) findSOAPAction(operation, portType string) string {
 			}
 		}
 	}
-	return ""
+	return operation
 }
 
 func (g *GoWSDL) findServiceAddress(name string) string {
@@ -654,13 +666,21 @@ func stripns(xsdType string) string {
 	return t
 }
 
+// replaces all characters which are not valid for a go identifier with an underscore
+func replaceNonIdentifierChars(s string) string {
+	return regexp.MustCompile("[^a-zA-Z0-9_]").ReplaceAllLiteralString(s, "_")
+}
+
 func makePublic(identifier string) string {
+	identifier = strings.ReplaceAll(identifier, "-", "_")
+	identifier = strings.ReplaceAll(identifier, ".", "_")
 	if isBasicType(identifier) {
 		return identifier
 	}
 	if identifier == "" {
 		return "EmptyString"
 	}
+
 	field := []rune(identifier)
 	if len(field) == 0 {
 		return identifier

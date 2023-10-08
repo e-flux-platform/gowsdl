@@ -121,7 +121,7 @@ var typesTmpl = `
 			{{/* ComplexTypeLocal */}}
 			{{with .ComplexType}}
 				type {{$typeName}} struct {
-					XMLName xml.Name ` + "`xml:\"{{$targetNamespace}} {{$name}}\"`" + `
+					XMLName xml.Name ` + "`xml:\"{{$name | typeXmlName}}\"`" + `
 					{{if ne .ComplexContent.Extension.Base ""}}
 						{{template "ComplexContent" .ComplexContent}}
 					{{else if ne .SimpleContent.Extension.Base ""}}
@@ -150,7 +150,7 @@ var typesTmpl = `
 				{{else}}
 					type {{$typeName}} interface{}
 				{{end}}
-			
+
 				{{if .Restriction.Enumeration}}
 				const (
 					{{with .Restriction}}

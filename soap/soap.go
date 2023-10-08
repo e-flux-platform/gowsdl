@@ -30,10 +30,14 @@ type SOAPEnvelopeResponse struct {
 }
 
 type SOAPEnvelope struct {
-	XMLName xml.Name      `xml:"soap:Envelope"`
-	XmlNS   string        `xml:"xmlns:soap,attr"`
-	Headers []interface{} `xml:"soap:Header"`
-	Body    SOAPBody
+	XMLName xml.Name `xml:"soapenv:Envelope"`
+	XMLNSNs string   `xml:"xmlns:ns,attr"`
+	XmlNS   string   `xml:"xmlns:soapenv,attr"`
+	Headers struct {
+		XMLName xml.Name `xml:"soapenv:Header"`
+		Headers []interface{}
+	}
+	Body SOAPBody
 }
 
 type SOAPHeaderResponse struct {
@@ -43,7 +47,7 @@ type SOAPHeaderResponse struct {
 }
 
 type SOAPBody struct {
-	XMLName xml.Name `xml:"soap:Body"`
+	XMLName xml.Name `xml:"soapenv:Body"`
 
 	Content interface{} `xml:",omitempty"`
 
@@ -248,6 +252,7 @@ type options struct {
 	httpHeaders      map[string]string
 	mtom             bool
 	mma              bool
+	envelope         *SOAPEnvelope
 }
 
 var defaultOptions = options{
@@ -265,6 +270,12 @@ type Option func(*options)
 func WithHTTPClient(c HTTPClient) Option {
 	return func(o *options) {
 		o.client = c
+	}
+}
+
+func WithEnvelope(envelope *SOAPEnvelope) Option {
+	return func(o *options) {
+		o.envelope = envelope
 	}
 }
 
@@ -408,14 +419,15 @@ func (s *Client) CallWithFaultDetail(soapAction string, request, response interf
 
 func (s *Client) call(ctx context.Context, soapAction string, request, response interface{}, faultDetail FaultError,
 	retAttachments *[]MIMEMultipartAttachment) error {
-	// SOAP envelope capable of namespace prefixes
-	envelope := SOAPEnvelope{
-		XmlNS: XmlNsSoapEnv,
+	if s.opts.envelope == nil {
+		s.opts.envelope = &SOAPEnvelope{
+			XmlNS: XmlNsSoapEnv,
+		}
 	}
 
-	envelope.Headers = s.headers
+	s.opts.envelope.Headers.Headers = s.headers
 
-	envelope.Body.Content = request
+	s.opts.envelope.Body.Content = request
 	buffer := new(bytes.Buffer)
 	var encoder SOAPEncoder
 	if s.opts.mtom && s.opts.mma {
@@ -428,7 +440,7 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 		encoder = xml.NewEncoder(buffer)
 	}
 
-	if err := encoder.Encode(envelope); err != nil {
+	if err := encoder.Encode(s.opts.envelope); err != nil {
 		return err
 	}
 
@@ -499,9 +511,12 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 		},
 	}
 
-	mtomBoundary, err := getMtomHeader(res.Header.Get("Content-Type"))
-	if err != nil {
-		return err
+	var mtomBoundary string
+	if s.opts.mtom {
+		mtomBoundary, err = getMtomHeader(res.Header.Get("Content-Type"))
+		if err != nil {
+			return err
+		}
 	}
 
 	var mmaBoundary string

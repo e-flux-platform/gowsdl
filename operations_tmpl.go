@@ -6,8 +6,8 @@ package gowsdl
 
 var opsTmpl = `
 {{range .}}
-	{{$privateType := .Name | makePrivate}}
-	{{$exportType := .Name | makePublic}}
+	{{$privateType := .Name | makePrivate | replaceNonIdentifierChars}}
+	{{$exportType := .Name | makePublic | replaceNonIdentifierChars}}
 
 	type {{$exportType}} interface {
 		{{range .Operations}}
