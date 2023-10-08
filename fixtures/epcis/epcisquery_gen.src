@@ -59,9 +59,11 @@ type Partner struct {
 }
 
 type PartnerIdentification struct {
+	XMLName xml.Name `xml:"http://www.unece.org/cefact/namespaces/StandardBusinessDocumentHeader Identifier"`
+
 	Value string `xml:",chardata" json:"-,"`
 
-	Authority string `xml:"Authority,attr,omitempty" json:"Authority,omitempty"`
+	Authority string `xml:"http://www.unece.org/cefact/namespaces/StandardBusinessDocumentHeader Authority,attr,omitempty" json:"Authority,omitempty"`
 }
 
 type ContactInformation struct {
@@ -1111,7 +1113,7 @@ func NewEPCISServicePortType(client *soap.Client) EPCISServicePortType {
 
 func (service *ePCISServicePortType) GetQueryNamesContext(ctx context.Context, request *EmptyParms) (*ArrayOfString, error) {
 	response := new(ArrayOfString)
-	err := service.client.CallContext(ctx, "''", request, response)
+	err := service.client.CallContext(ctx, "http://ochp.eu/1.4/getQueryNames", request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -1128,7 +1130,7 @@ func (service *ePCISServicePortType) GetQueryNames(request *EmptyParms) (*ArrayO
 
 func (service *ePCISServicePortType) SubscribeContext(ctx context.Context, request *Subscribe) (*VoidHolder, error) {
 	response := new(VoidHolder)
-	err := service.client.CallContext(ctx, "''", request, response)
+	err := service.client.CallContext(ctx, "http://ochp.eu/1.4/subscribe", request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -1145,7 +1147,7 @@ func (service *ePCISServicePortType) Subscribe(request *Subscribe) (*VoidHolder,
 
 func (service *ePCISServicePortType) UnsubscribeContext(ctx context.Context, request *Unsubscribe) (*VoidHolder, error) {
 	response := new(VoidHolder)
-	err := service.client.CallContext(ctx, "''", request, response)
+	err := service.client.CallContext(ctx, "http://ochp.eu/1.4/unsubscribe", request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -1162,7 +1164,7 @@ func (service *ePCISServicePortType) Unsubscribe(request *Unsubscribe) (*VoidHol
 
 func (service *ePCISServicePortType) GetSubscriptionIDsContext(ctx context.Context, request *GetSubscriptionIDs) (*ArrayOfString, error) {
 	response := new(ArrayOfString)
-	err := service.client.CallContext(ctx, "''", request, response)
+	err := service.client.CallContext(ctx, "http://ochp.eu/1.4/getSubscriptionIDs", request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -1179,7 +1181,7 @@ func (service *ePCISServicePortType) GetSubscriptionIDs(request *GetSubscription
 
 func (service *ePCISServicePortType) PollContext(ctx context.Context, request *Poll) (*QueryResults, error) {
 	response := new(QueryResults)
-	err := service.client.CallContext(ctx, "''", request, response)
+	err := service.client.CallContext(ctx, "http://ochp.eu/1.4/poll", request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -1196,7 +1198,7 @@ func (service *ePCISServicePortType) Poll(request *Poll) (*QueryResults, error) 
 
 func (service *ePCISServicePortType) GetStandardVersionContext(ctx context.Context, request *EmptyParms) (*string, error) {
 	response := new(string)
-	err := service.client.CallContext(ctx, "''", request, response)
+	err := service.client.CallContext(ctx, "http://ochp.eu/1.4/getStandardVersion", request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -1213,7 +1215,7 @@ func (service *ePCISServicePortType) GetStandardVersion(request *EmptyParms) (*s
 
 func (service *ePCISServicePortType) GetVendorVersionContext(ctx context.Context, request *EmptyParms) (*string, error) {
 	response := new(string)
-	err := service.client.CallContext(ctx, "''", request, response)
+	err := service.client.CallContext(ctx, "http://ochp.eu/1.4/getVendorVersion", request, response)
 	if err != nil {
 		return nil, err
 	}
