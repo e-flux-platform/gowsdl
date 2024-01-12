@@ -11,6 +11,8 @@ import (
 	"net"
 	"net/http"
 	"time"
+
+	"github.com/go-xmlfmt/xmlfmt"
 )
 
 type SOAPEncoder interface {
@@ -418,7 +420,7 @@ func (s *Client) CallWithFaultDetail(soapAction string, request, response interf
 }
 
 func (s *Client) call(ctx context.Context, soapAction string, request, response interface{}, faultDetail FaultError,
-	retAttachments *[]MIMEMultipartAttachment) error {
+	retAttachments *[]MIMEMultipartAttachment) (err error) {
 	if s.opts.envelope == nil {
 		s.opts.envelope = &SOAPEnvelope{
 			XmlNS: XmlNsSoapEnv,
@@ -429,6 +431,20 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 
 	s.opts.envelope.Body.Content = request
 	buffer := new(bytes.Buffer)
+
+	debugRequest := 2
+	debugResponse := 2
+	var cachedRequestBody []byte
+	var cachedResponseBody []byte
+	defer func() {
+		if cachedRequestBody != nil && debugRequest == 2 || debugRequest == 1 && err != nil {
+			fmt.Printf("Request:\n%s\n\n", xmlfmt.FormatXML(string(cachedRequestBody), "", "  "))
+		}
+		if cachedResponseBody != nil && debugResponse == 2 || debugResponse == 1 && err != nil {
+			fmt.Printf("Response:\n%s\n\n", cachedResponseBody)
+		}
+	}()
+
 	var encoder SOAPEncoder
 	if s.opts.mtom && s.opts.mma {
 		return fmt.Errorf("cannot use MTOM (XOP) and MMA (MIME Multipart Attachments) option at the same time")
@@ -440,15 +456,25 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 		encoder = xml.NewEncoder(buffer)
 	}
 
-	if err := encoder.Encode(s.opts.envelope); err != nil {
+	if err = encoder.Encode(s.opts.envelope); err != nil {
 		return err
 	}
 
-	if err := encoder.Flush(); err != nil {
+	if err = encoder.Flush(); err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("POST", s.url, buffer)
+	var reqbody io.Reader = buffer
+	if debugRequest > 0 {
+		cachedRequestBody, err = io.ReadAll(buffer)
+		if err != nil {
+			return err
+		}
+		reqbody = io.NopCloser(bytes.NewReader(cachedRequestBody))
+	}
+
+	var req *http.Request
+	req, err = http.NewRequest("POST", s.url, reqbody)
 	if err != nil {
 		return err
 	}
@@ -487,7 +513,8 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 		client = &http.Client{Timeout: s.opts.contimeout, Transport: tr}
 	}
 
-	res, err := client.Do(req)
+	var res *http.Response
+	res, err = client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -530,13 +557,12 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 	// we need to store the body in case of an error
 	// to return the right HTTPError/ResponseBody
 	body := res.Body
-	var cachedErrorBody []byte
-	if res.StatusCode == 500 {
-		cachedErrorBody, err = io.ReadAll(res.Body)
+	if res.StatusCode == 500 || debugResponse > 0 {
+		cachedResponseBody, err = io.ReadAll(res.Body)
 		if err != nil {
 			return err
 		}
-		body = io.NopCloser(bytes.NewReader(cachedErrorBody))
+		body = io.NopCloser(bytes.NewReader(cachedResponseBody))
 	}
 
 	var dec SOAPDecoder
@@ -548,12 +574,12 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 		dec = xml.NewDecoder(body)
 	}
 
-	if err := dec.Decode(respEnvelope); err != nil {
+	if err = dec.Decode(respEnvelope); err != nil {
 		// the response doesn't contain a Fault/SOAPBody, so we return the original body
 		if res.StatusCode == 500 {
 			return &HTTPError{
 				StatusCode:   res.StatusCode,
-				ResponseBody: cachedErrorBody,
+				ResponseBody: cachedResponseBody,
 			}
 		}
 		return err
@@ -562,5 +588,6 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 	if respEnvelope.Attachments != nil {
 		*retAttachments = respEnvelope.Attachments
 	}
+
 	return respEnvelope.Body.ErrorFromFault()
 }

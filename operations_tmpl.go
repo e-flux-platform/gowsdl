@@ -5,9 +5,10 @@
 package gowsdl
 
 var opsTmpl = `
+// start: opsTmpl
 {{range .}}
-	{{$privateType := .Name | makePrivate | replaceNonIdentifierChars}}
-	{{$exportType := .Name | makePublic | replaceNonIdentifierChars}}
+	{{$privateType := .Name | makePrivate | normalize}}
+	{{$exportType := .Name | makePublic | normalize}}
 
 	type {{$exportType}} interface {
 		{{range .Operations}}
@@ -22,9 +23,7 @@ var opsTmpl = `
 			// {{range .Faults}}
 			//   - {{.Name}} {{.Doc}}{{end}}{{end}}
 			{{if ne .Doc ""}}/* {{.Doc}} */{{end}}
-			{{makePublic .Name | replaceReservedWords}} ({{if ne $requestType ""}}request *{{$requestType}}{{end}}) ({{if ne $responseType ""}}*{{$responseType}}, {{end}}error)
-			{{/*end*/}}
-			{{makePublic .Name | replaceReservedWords}}Context (ctx context.Context, {{if ne $requestType ""}}request *{{$requestType}}{{end}}) ({{if ne $responseType ""}}*{{$responseType}}, {{end}}error)
+			{{makePublic .Name | replaceReservedWords}} (ctx context.Context, {{if ne $requestType ""}}request *{{$requestType}}{{end}}) ({{if ne $responseType ""}}*{{$responseType}}, {{end}}error)
 			{{/*end*/}}
 		{{end}}
 	}
@@ -43,7 +42,7 @@ var opsTmpl = `
 		{{$requestType := findType .Input.Message | replaceReservedWords | makePublic}}
 		{{$soapAction := findSOAPAction .Name $privateType}}
 		{{$responseType := findType .Output.Message | replaceReservedWords | makePublic}}
-		func (service *{{$privateType}}) {{makePublic .Name | replaceReservedWords}}Context (ctx context.Context, {{if ne $requestType ""}}request *{{$requestType}}{{end}}) ({{if ne $responseType ""}}*{{$responseType}}, {{end}}error) {
+		func (service *{{$privateType}}) {{makePublic .Name | replaceReservedWords}} (ctx context.Context, {{if ne $requestType ""}}request *{{$requestType}}{{end}}) ({{if ne $responseType ""}}*{{$responseType}}, {{end}}error) {
 			{{if ne $responseType ""}}response := new({{$responseType}}){{end}}
 			err := service.client.CallContext(ctx, "{{if ne $soapAction ""}}{{$soapAction}}{{else}}''{{end}}", {{if ne $requestType ""}}request{{else}}nil{{end}}, {{if ne $responseType ""}}response{{else}}struct{}{}{{end}})
 			if err != nil {
@@ -53,13 +52,7 @@ var opsTmpl = `
 			return {{if ne $responseType ""}}response, {{end}}nil
 		}
 
-		func (service *{{$privateType}}) {{makePublic .Name | replaceReservedWords}} ({{if ne $requestType ""}}request *{{$requestType}}{{end}}) ({{if ne $responseType ""}}*{{$responseType}}, {{end}}error) {
-			return service.{{makePublic .Name | replaceReservedWords}}Context(
-				context.Background(),
-				{{if ne $requestType ""}}request,{{end}}
-			)
-		}
-
 	{{end}}
 {{end}}
+// end: opsTmpl
 `

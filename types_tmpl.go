@@ -5,6 +5,7 @@
 package gowsdl
 
 var typesTmpl = `
+// start: typesTmpl
 {{define "SimpleType"}}
 	{{$typeName := replaceReservedWords .Name | makePublic}}
 	{{if .Doc}} {{.Doc | comment}} {{end}}
@@ -75,28 +76,34 @@ var typesTmpl = `
 			{{template "Attributes" .Attributes}}
 		{{end}}
 	{{end}}
-	} ` + "`" + `xml:"{{.Name}},omitempty" json:"{{.Name}},omitempty"` + "`" + `
+	} ` + "`" + `xml:"ns:{{.Name}},omitempty" json:"{{.Name}},omitempty"` + "`" + `
 {{end}}
 
+// Elements
 {{define "Elements"}}
 	{{range .}}
 		{{if ne .Ref ""}}
+			// HERE1
 			{{removeNS .Ref | replaceReservedWords  | makePublic}} {{if eq .MaxOccurs "unbounded"}}[]{{end}}{{toGoType .Ref .Nillable }} ` + "`" + `xml:"{{.Ref | removeNS}},omitempty" json:"{{.Ref | removeNS}},omitempty"` + "`" + `
-		{{else}}
-		{{if not .Type}}
+			{{else}}
+			{{if not .Type}}
 			{{if .SimpleType}}
-				{{if .Doc}} {{.Doc | comment}} {{end}}
-				{{if ne .SimpleType.List.ItemType ""}}
-					{{ normalize .Name | makeFieldPublic}} []{{toGoType .SimpleType.List.ItemType false}} ` + "`" + `xml:"{{.Name}},omitempty" json:"{{.Name}},omitempty"` + "`" + `
+			{{if .Doc}} {{.Doc | comment}} {{end}}
+			{{if ne .SimpleType.List.ItemType ""}}
+					// HERE2
+				{{ normalize .Name | makeFieldPublic}} []{{toGoType .SimpleType.List.ItemType false}} ` + "`" + `xml:"{{.Name}},omitempty" json:"{{.Name}},omitempty"` + "`" + `
 				{{else}}
-					{{ normalize .Name | makeFieldPublic}} {{toGoType .SimpleType.Restriction.Base false}} ` + "`" + `xml:"{{.Name}},omitempty" json:"{{.Name}},omitempty"` + "`" + `
+					// HERE3
+					{{ normalize .Name | makeFieldPublic}} {{toGoType .SimpleType.Restriction.Base false}} ` + "`" + `xml:"ns:{{.Name}},omitempty" json:"{{.Name}},omitempty"` + "`" + `
 				{{end}}
 			{{else}}
+				// HERE4
 				{{template "ComplexTypeInline" .}}
 			{{end}}
 		{{else}}
 			{{if .Doc}}{{.Doc | comment}} {{end}}
-			{{replaceAttrReservedWords .Name | makeFieldPublic}} {{if eq .MaxOccurs "unbounded"}}[]{{end}}{{toGoType .Type .Nillable }} ` + "`" + `xml:"{{.Name}},omitempty" json:"{{.Name}},omitempty"` + "`" + ` {{end}}
+			// HERE5
+			{{replaceAttrReservedWords .Name | makeFieldPublic}} {{if eq .MaxOccurs "unbounded"}}[]{{end}}{{toGoType .Type .Nillable }} ` + "`" + `xml:"{{.Name | addNsIfRequest}},omitempty" json:"{{.Name}},omitempty"` + "`" + ` {{end}}
 		{{end}}
 	{{end}}
 {{end}}
@@ -121,7 +128,8 @@ var typesTmpl = `
 			{{/* ComplexTypeLocal */}}
 			{{with .ComplexType}}
 				type {{$typeName}} struct {
-					XMLName xml.Name ` + "`xml:\"{{$name | typeXmlName}}\"`" + `
+					// XXX
+					XMLName xml.Name ` + "`xml:\"{{$name | addNsIfRequest}}\"`" + `
 					{{if ne .ComplexContent.Extension.Base ""}}
 						{{template "ComplexContent" .ComplexContent}}
 					{{else if ne .SimpleContent.Extension.Base ""}}
@@ -222,4 +230,5 @@ var typesTmpl = `
 		{{end}}
 	{{end}}
 {{end}}
+// end: typesTmpl
 `

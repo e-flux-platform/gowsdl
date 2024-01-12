@@ -1,0 +1,7 @@
+- datetime fields are not native datetime objects, and there are also different ones LocalDateTimeType/DateTimeType/soap.XSDDateTime
+- XMLName fields everywhere
+- request is always a struct with pointers, even though if only 0-1 fields
+- split between normal and live service
+- EOF errors should have more info
+- restriction becomes plain string or int, instead of using idomatic Go enum(ish) types
+- check if result always needed

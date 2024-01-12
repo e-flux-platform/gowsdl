@@ -134,9 +134,9 @@ func main() {
 	if err != nil {
 		file.Write(data.Bytes())
 		log.Fatalln(err)
-	} else {
-		file.Write(source)
 	}
+
+	file.Write(source)
 
 	// server
 	serverFile, err := os.Create(pkg + "/" + "server" + *outFile)
