@@ -434,14 +434,30 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 
 	debugRequest := 2
 	debugResponse := 2
+	var req *http.Request
+	var res *http.Response
 	var cachedRequestBody []byte
 	var cachedResponseBody []byte
 	defer func() {
 		if cachedRequestBody != nil && debugRequest == 2 || debugRequest == 1 && err != nil {
-			fmt.Printf("Request:\n%s\n\n", xmlfmt.FormatXML(string(cachedRequestBody), "", "  "))
+			if req.Header != nil && len(req.Header) != 0 {
+				fmt.Printf("Request Headers:\n")
+				for k, v := range req.Header {
+					fmt.Printf("%s: %s\n", k, v)
+				}
+				fmt.Printf("\n")
+			}
+			fmt.Printf("Request Body:%s\n\n", xmlfmt.FormatXML(string(cachedRequestBody), "", "  "))
 		}
 		if cachedResponseBody != nil && debugResponse == 2 || debugResponse == 1 && err != nil {
-			fmt.Printf("Response:\n%s\n\n", cachedResponseBody)
+			if res.Header != nil && len(res.Header) != 0 {
+				fmt.Printf("Response Headers:\n")
+				for k, v := range res.Header {
+					fmt.Printf("%s: %s\n", k, v)
+				}
+				fmt.Printf("\n")
+			}
+			fmt.Printf("Response Body:%s\n\n", cachedResponseBody)
 		}
 	}()
 
@@ -473,7 +489,6 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 		reqbody = io.NopCloser(bytes.NewReader(cachedRequestBody))
 	}
 
-	var req *http.Request
 	req, err = http.NewRequest("POST", s.url, reqbody)
 	if err != nil {
 		return err
@@ -513,7 +528,6 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 		client = &http.Client{Timeout: s.opts.contimeout, Transport: tr}
 	}
 
-	var res *http.Response
 	res, err = client.Do(req)
 	if err != nil {
 		return err
