@@ -161,16 +161,16 @@ func (g *GoWSDL) Start() (map[string][]byte, error) {
 		}
 	}()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		var err error
-
-		gocode["server"], err = g.genServer()
-		if err != nil {
-			log.Println(err)
-		}
-	}()
+	//wg.Add(1)
+	//go func() {
+	//	defer wg.Done()
+	//	var err error
+	//
+	//	gocode["server"], err = g.genServer()
+	//	if err != nil {
+	//		log.Println(err)
+	//	}
+	//}()
 
 	wg.Wait()
 
@@ -179,12 +179,12 @@ func (g *GoWSDL) Start() (map[string][]byte, error) {
 		log.Println(err)
 	}
 
-	gocode["server_header"], err = g.genServerHeader()
-	if err != nil {
-		log.Println(err)
-	}
-
-	gocode["server_wsdl"] = []byte("var wsdl = `" + string(g.rawWSDL) + "`")
+	//gocode["server_header"], err = g.genServerHeader()
+	//if err != nil {
+	//	log.Println(err)
+	//}
+	//
+	//gocode["server_wsdl"] = []byte("var wsdl = `" + string(g.rawWSDL) + "`")
 
 	return gocode, nil
 }
@@ -343,26 +343,26 @@ func (g *GoWSDL) genOperations() ([]byte, error) {
 	return data.Bytes(), nil
 }
 
-func (g *GoWSDL) genServer() ([]byte, error) {
-	funcMap := template.FuncMap{
-		"toGoType":             toGoType,
-		"stripns":              stripns,
-		"replaceReservedWords": replaceReservedWords,
-		"makePublic":           g.makePublicFn,
-		"findType":             g.findType,
-		"findSOAPAction":       g.findSOAPAction,
-		"findServiceAddress":   g.findServiceAddress,
-	}
-
-	data := new(bytes.Buffer)
-	tmpl := template.Must(template.New("server").Funcs(funcMap).Parse(serverTmpl))
-	err := tmpl.Execute(data, g.wsdl.PortTypes)
-	if err != nil {
-		return nil, err
-	}
-
-	return data.Bytes(), nil
-}
+//func (g *GoWSDL) genServer() ([]byte, error) {
+//	funcMap := template.FuncMap{
+//		"toGoType":             toGoType,
+//		"stripns":              stripns,
+//		"replaceReservedWords": replaceReservedWords,
+//		"makePublic":           g.makePublicFn,
+//		"findType":             g.findType,
+//		"findSOAPAction":       g.findSOAPAction,
+//		"findServiceAddress":   g.findServiceAddress,
+//	}
+//
+//	data := new(bytes.Buffer)
+//	tmpl := template.Must(template.New("server").Funcs(funcMap).Parse(serverTmpl))
+//	err := tmpl.Execute(data, g.wsdl.PortTypes)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return data.Bytes(), nil
+//}
 
 func (g *GoWSDL) genHeader() ([]byte, error) {
 	funcMap := template.FuncMap{
@@ -385,25 +385,25 @@ func (g *GoWSDL) genHeader() ([]byte, error) {
 	return data.Bytes(), nil
 }
 
-func (g *GoWSDL) genServerHeader() ([]byte, error) {
-	funcMap := template.FuncMap{
-		"toGoType":             toGoType,
-		"stripns":              stripns,
-		"replaceReservedWords": replaceReservedWords,
-		"makePublic":           g.makePublicFn,
-		"findType":             g.findType,
-		"comment":              comment,
-	}
-
-	data := new(bytes.Buffer)
-	tmpl := template.Must(template.New("server_header").Funcs(funcMap).Parse(serverHeaderTmpl))
-	err := tmpl.Execute(data, g.pkg)
-	if err != nil {
-		return nil, err
-	}
-
-	return data.Bytes(), nil
-}
+//func (g *GoWSDL) genServerHeader() ([]byte, error) {
+//	funcMap := template.FuncMap{
+//		"toGoType":             toGoType,
+//		"stripns":              stripns,
+//		"replaceReservedWords": replaceReservedWords,
+//		"makePublic":           g.makePublicFn,
+//		"findType":             g.findType,
+//		"comment":              comment,
+//	}
+//
+//	data := new(bytes.Buffer)
+//	tmpl := template.Must(template.New("server_header").Funcs(funcMap).Parse(serverHeaderTmpl))
+//	err := tmpl.Execute(data, g.pkg)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	return data.Bytes(), nil
+//}
 
 var reservedWords = map[string]string{
 	"break":       "break_",
@@ -624,18 +624,18 @@ func (g *GoWSDL) findNameByType(name string) string {
 // TODO(c4milo): improve runtime complexity if performance turns out to be an issue.
 func (g *GoWSDL) findSOAPAction(operation, portType string) string {
 	return fmt.Sprintf("http://ochp.eu/1.4/%s", operation)
-	for _, binding := range g.wsdl.Binding {
-		if strings.ToUpper(stripns(binding.Type)) != strings.ToUpper(portType) {
-			continue
-		}
-
-		for _, soapOp := range binding.Operations {
-			if soapOp.Name == operation {
-				return soapOp.SOAPOperation.SOAPAction
-			}
-		}
-	}
-	return operation
+	//for _, binding := range g.wsdl.Binding {
+	//	if strings.ToUpper(stripns(binding.Type)) != strings.ToUpper(portType) {
+	//		continue
+	//	}
+	//
+	//	for _, soapOp := range binding.Operations {
+	//		if soapOp.Name == operation {
+	//			return soapOp.SOAPOperation.SOAPAction
+	//		}
+	//	}
+	//}
+	//return operation
 }
 
 func (g *GoWSDL) findServiceAddress(name string) string {
