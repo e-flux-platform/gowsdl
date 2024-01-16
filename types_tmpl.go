@@ -103,7 +103,7 @@ var typesTmpl = `
 		{{else}}
 			{{if .Doc}}{{.Doc | comment}} {{end}}
 			// HERE5
-			{{replaceAttrReservedWords .Name | makeFieldPublic}} {{if eq .MaxOccurs "unbounded"}}[]{{end}}{{toGoType .Type .Nillable }} ` + "`" + `xml:"{{.Name | addNsIfRequest}},omitempty" json:"{{.Name}},omitempty"` + "`" + ` {{end}}
+			{{replaceAttrReservedWords .Name | makeFieldPublic}} {{if eq .MaxOccurs "unbounded"}}[]{{end}}{{toGoType .Type .Nillable }} ` + "`" + `xml:"{{.Name | addNsToElement}},omitempty" json:"{{.Name}},omitempty"` + "`" + ` {{end}}
 		{{end}}
 	{{end}}
 {{end}}
@@ -120,7 +120,8 @@ var typesTmpl = `
 	{{range .SimpleType}}
 		{{template "SimpleType" .}}
 	{{end}}
-
+	
+	// typesTmpl: Elements
 	{{range .Elements}}
 		{{$name := .Name}}
 		{{$typeName := replaceReservedWords $name | makePublic}}
@@ -129,7 +130,7 @@ var typesTmpl = `
 			{{with .ComplexType}}
 				type {{$typeName}} struct {
 					// XXX
-					XMLName xml.Name ` + "`xml:\"{{$name | addNsIfRequest}}\"`" + `
+					XMLName xml.Name ` + "`xml:\"{{$name | addNsToSchema}}\"`" + `
 					{{if ne .ComplexContent.Extension.Base ""}}
 						{{template "ComplexContent" .ComplexContent}}
 					{{else if ne .SimpleContent.Extension.Base ""}}
@@ -202,10 +203,12 @@ var typesTmpl = `
 		{{end}}
 	{{end}}
 
+	// typesTmpl: ComplexTypes
 	{{range .ComplexTypes}}
 		{{/* ComplexTypeGlobal */}}
 		{{$typeName := replaceReservedWords .Name | makePublic}}
 		{{if and (eq (len .SimpleContent.Extension.Attributes) 0) (eq (toGoType .SimpleContent.Extension.Base false) "string") }}
+			// typesTmpl: ComplexTypes1
 			type {{$typeName}} string
 		{{else}}
 			type {{$typeName}} struct {
@@ -215,10 +218,13 @@ var typesTmpl = `
 				{{end}}
 
 				{{if ne .ComplexContent.Extension.Base ""}}
+					// typesTmpl: ComplexTypes2a
 					{{template "ComplexContent" .ComplexContent}}
 				{{else if ne .SimpleContent.Extension.Base ""}}
+					// typesTmpl: ComplexTypes2b
 					{{template "SimpleContent" .SimpleContent}}
 				{{else}}
+					// typesTmpl: ComplexTypes2c
 					{{template "Elements" .Sequence}}
 					{{template "Any" .Any}}
 					{{template "Elements" .Choice}}

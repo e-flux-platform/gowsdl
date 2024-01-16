@@ -134,6 +134,7 @@ func (g *GoWSDL) Start() (map[string][]byte, error) {
 
 	// Process WSDL nodes
 	for _, schema := range g.wsdl.Types.Schemas {
+		fmt.Println("schema", schema)
 		newTraverser(schema, g.wsdl.Types.Schemas).traverse()
 	}
 
@@ -302,7 +303,52 @@ func (g *GoWSDL) genTypes() ([]byte, error) {
 		"removePointerFromType":    removePointerFromType,
 		"setNS":                    g.setNS,
 		"getNS":                    g.getNS,
-		"addNsIfRequest": func(x string) string {
+		"addNsToElement": func(x string) string {
+			for _, portType := range g.wsdl.PortTypes {
+				_ = portType.Name
+			}
+
+			for _, binding := range g.wsdl.Binding {
+				_ = binding.Name
+			}
+
+			for _, service := range g.wsdl.Service {
+				for _, port := range service.Ports {
+					_ = port.Name
+					_ = port.Binding
+					_ = port.SOAPAddress.Location
+				}
+			}
+
+			for _ = range g.wsdl.Messages {
+			}
+
+			g.getNS()
+
+			if !strings.HasPrefix(x, "result") && !strings.HasSuffix(x, "Response") {
+				return fmt.Sprintf(`ns:%s`, x)
+			}
+			return x
+		},
+		"addNsToSchema": func(x string) string {
+			for _, portType := range g.wsdl.PortTypes {
+				_ = portType.Name
+			}
+
+			for _, binding := range g.wsdl.Binding {
+				_ = binding.Name
+			}
+
+			for _, service := range g.wsdl.Service {
+				for _, port := range service.Ports {
+					_ = port.Name
+					_ = port.Binding
+					_ = port.SOAPAddress.Location
+				}
+			}
+
+			g.getNS()
+
 			if !strings.HasPrefix(x, "result") && !strings.HasSuffix(x, "Response") {
 				return fmt.Sprintf(`ns:%s`, x)
 			}

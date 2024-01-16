@@ -21,7 +21,7 @@ const (
 
 // XSDDateTime is a type for representing xsd:datetime in Golang
 type XSDDateTime struct {
-	innerTime time.Time
+	InnerTime time.Time
 	hasTz     bool
 }
 
@@ -34,11 +34,11 @@ func (xdt *XSDDateTime) StripTz() {
 // If there is a TZ, that TZ is used, otherwise local TZ is used
 func (xdt *XSDDateTime) ToGoTime() time.Time {
 	if xdt.hasTz {
-		return xdt.innerTime
+		return xdt.InnerTime
 	}
-	return time.Date(xdt.innerTime.Year(), xdt.innerTime.Month(), xdt.innerTime.Day(),
-		xdt.innerTime.Hour(), xdt.innerTime.Minute(), xdt.innerTime.Second(),
-		xdt.innerTime.Nanosecond(), time.Local)
+	return time.Date(xdt.InnerTime.Year(), xdt.InnerTime.Month(), xdt.InnerTime.Day(),
+		xdt.InnerTime.Hour(), xdt.InnerTime.Minute(), xdt.InnerTime.Second(),
+		xdt.InnerTime.Nanosecond(), time.Local)
 }
 
 // MarshalXML implements xml.MarshalerAttr on XSDDateTime
@@ -63,12 +63,12 @@ func (xdt XSDDateTime) MarshalXMLAttr(name xml.Name) (xml.Attr, error) {
 
 // returns string representation and skips "zero" time values. It also checks if nanoseconds and TZ exist.
 func (xdt XSDDateTime) string() string {
-	if !xdt.innerTime.IsZero() {
+	if !xdt.InnerTime.IsZero() {
 		dateTimeLayout := time.RFC3339Nano
-		if xdt.innerTime.Nanosecond() == 0 {
+		if xdt.InnerTime.Nanosecond() == 0 {
 			dateTimeLayout = time.RFC3339
 		}
-		dtString := xdt.innerTime.Format(dateTimeLayout)
+		dtString := xdt.InnerTime.Format(dateTimeLayout)
 		if !xdt.hasTz {
 			// split off time portion
 			dateAndTime := strings.SplitN(dtString, "T", 2)
@@ -89,14 +89,14 @@ func (xdt *XSDDateTime) UnmarshalXML(d *xml.Decoder, start xml.StartElement) err
 	if err != nil {
 		return err
 	}
-	xdt.innerTime, xdt.hasTz, err = fromString(content, time.RFC3339Nano)
+	xdt.InnerTime, xdt.hasTz, err = fromString(content, time.RFC3339Nano)
 	return err
 }
 
 // UnmarshalXMLAttr implements xml.UnmarshalerAttr on XSDDateTime to use time.RFC3339Nano
 func (xdt *XSDDateTime) UnmarshalXMLAttr(attr xml.Attr) error {
 	var err error
-	xdt.innerTime, xdt.hasTz, err = fromString(attr.Value, time.RFC3339Nano)
+	xdt.InnerTime, xdt.hasTz, err = fromString(attr.Value, time.RFC3339Nano)
 	return err
 }
 
@@ -139,7 +139,7 @@ func fromString(content string, format string) (time.Time, bool, error) {
 // CreateXsdDateTime creates an object represent xsd:datetime object in Golang
 func CreateXsdDateTime(dt time.Time, hasTz bool) XSDDateTime {
 	return XSDDateTime{
-		innerTime: dt,
+		InnerTime: dt,
 		hasTz:     hasTz,
 	}
 }

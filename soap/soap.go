@@ -441,13 +441,13 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 	defer func() {
 		fmt.Printf("Soap call: %s %s\n", s.url, soapAction)
 		if cachedRequestBody != nil && debugRequest == 2 || debugRequest == 1 && err != nil {
-			fmt.Printf("Request Body:%s\n", xmlfmt.FormatXML(string(cachedRequestBody), "", "  "))
+			fmt.Printf("  Request Body:%s\n", xmlfmt.FormatXML(string(cachedRequestBody), "    ", "  "))
 		}
 		if res != nil && debugResponse == 2 || debugResponse == 1 && err != nil {
 			if cachedResponseBody != nil {
-				fmt.Printf("Response (%d) Body:%s\n", res.StatusCode, cachedResponseBody)
+				fmt.Printf("  Response (%d) Body:%s\n", res.StatusCode, xmlfmt.FormatXML(string(cachedResponseBody), "    ", "  "))
 			} else {
-				fmt.Printf("Response: %d\n", res.StatusCode)
+				fmt.Printf("  Response: %d\n", res.StatusCode)
 			}
 		}
 	}()
