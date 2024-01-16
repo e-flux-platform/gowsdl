@@ -439,26 +439,16 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 	var cachedRequestBody []byte
 	var cachedResponseBody []byte
 	defer func() {
+		fmt.Printf("Soap call: %s %s\n", s.url, soapAction)
 		if cachedRequestBody != nil && debugRequest == 2 || debugRequest == 1 && err != nil {
-			if req.Header != nil && len(req.Header) != 0 {
-				fmt.Printf("Request Headers:\n")
-				for k, v := range req.Header {
-					fmt.Printf("%s: %s\n", k, v)
-				}
-				fmt.Printf("\n")
-			}
-			fmt.Printf("Request Body:%s\n\n", xmlfmt.FormatXML(string(cachedRequestBody), "", "  "))
+			fmt.Printf("Request Body:%s\n", xmlfmt.FormatXML(string(cachedRequestBody), "", "  "))
 		}
-		if cachedResponseBody != nil && debugResponse == 2 || debugResponse == 1 && err != nil {
-			if res.Header != nil && len(res.Header) != 0 {
-				fmt.Printf("Response Status: %d\n", res.StatusCode)
-				fmt.Printf("Response Headers:\n")
-				for k, v := range res.Header {
-					fmt.Printf("%s: %s\n", k, v)
-				}
-				fmt.Printf("\n")
+		if res != nil && debugResponse == 2 || debugResponse == 1 && err != nil {
+			if cachedResponseBody != nil {
+				fmt.Printf("Response (%d) Body:%s\n", res.StatusCode, cachedResponseBody)
+			} else {
+				fmt.Printf("Response: %d\n", res.StatusCode)
 			}
-			fmt.Printf("Response Body:%s\n\n", cachedResponseBody)
 		}
 	}()
 
