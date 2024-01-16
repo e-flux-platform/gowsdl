@@ -451,6 +451,7 @@ func (s *Client) call(ctx context.Context, soapAction string, request, response 
 		}
 		if cachedResponseBody != nil && debugResponse == 2 || debugResponse == 1 && err != nil {
 			if res.Header != nil && len(res.Header) != 0 {
+				fmt.Printf("Response Status: %d\n", res.StatusCode)
 				fmt.Printf("Response Headers:\n")
 				for k, v := range res.Header {
 					fmt.Printf("%s: %s\n", k, v)

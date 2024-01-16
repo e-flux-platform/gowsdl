@@ -623,19 +623,14 @@ func (g *GoWSDL) findNameByType(name string) string {
 // TODO(c4milo): Add support for namespaces instead of striping them out
 // TODO(c4milo): improve runtime complexity if performance turns out to be an issue.
 func (g *GoWSDL) findSOAPAction(operation, portType string) string {
-	return fmt.Sprintf("http://ochp.eu/1.4/%s", operation)
-	//for _, binding := range g.wsdl.Binding {
-	//	if strings.ToUpper(stripns(binding.Type)) != strings.ToUpper(portType) {
-	//		continue
-	//	}
-	//
-	//	for _, soapOp := range binding.Operations {
-	//		if soapOp.Name == operation {
-	//			return soapOp.SOAPOperation.SOAPAction
-	//		}
-	//	}
-	//}
-	//return operation
+	for _, binding := range g.wsdl.Binding {
+		for _, soapOp := range binding.Operations {
+			if soapOp.Name == operation {
+				return soapOp.SOAPOperation.SOAPAction
+			}
+		}
+	}
+	return operation
 }
 
 func (g *GoWSDL) findServiceAddress(name string) string {

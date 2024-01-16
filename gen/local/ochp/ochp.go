@@ -1871,7 +1871,7 @@ func NewOCHP_1_4_live(client *soap.Client) OCHP_1_4_live {
 
 func (service *oCHP_1_4_live) UpdateStatus(ctx context.Context, request *UpdateStatusRequest) (*UpdateStatusResponse, error) {
 	response := new(UpdateStatusResponse)
-	err := service.client.CallContext(ctx, "http://ochp.eu/1.4/UpdateStatus", request, response)
+	err := service.client.CallContext(ctx, "http://ochp.e-clearing.net/service/UpdateStatus", request, response)
 	if err != nil {
 		return nil, err
 	}
@@ -1881,7 +1881,7 @@ func (service *oCHP_1_4_live) UpdateStatus(ctx context.Context, request *UpdateS
 
 func (service *oCHP_1_4_live) GetStatus(ctx context.Context, request *GetStatusRequest) (*GetStatusResponse, error) {
 	response := new(GetStatusResponse)
-	err := service.client.CallContext(ctx, "http://ochp.eu/1.4/GetStatus", request, response)
+	err := service.client.CallContext(ctx, "http://ochp.e-clearing.net/service/GetStatus", request, response)
 	if err != nil {
 		return nil, err
 	}
