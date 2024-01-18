@@ -22,18 +22,18 @@ const (
 // XSDDateTime is a type for representing xsd:datetime in Golang
 type XSDDateTime struct {
 	InnerTime time.Time
-	hasTz     bool
+	HasTz     bool
 }
 
 // StripTz removes TZ information from the datetime
 func (xdt *XSDDateTime) StripTz() {
-	xdt.hasTz = false
+	xdt.HasTz = false
 }
 
 // ToGoTime converts the time to time.Time by checking if a TZ is specified.
 // If there is a TZ, that TZ is used, otherwise local TZ is used
 func (xdt *XSDDateTime) ToGoTime() time.Time {
-	if xdt.hasTz {
+	if xdt.HasTz {
 		return xdt.InnerTime
 	}
 	return time.Date(xdt.InnerTime.Year(), xdt.InnerTime.Month(), xdt.InnerTime.Day(),
@@ -69,7 +69,7 @@ func (xdt XSDDateTime) string() string {
 			dateTimeLayout = time.RFC3339
 		}
 		dtString := xdt.InnerTime.Format(dateTimeLayout)
-		if !xdt.hasTz {
+		if !xdt.HasTz {
 			// split off time portion
 			dateAndTime := strings.SplitN(dtString, "T", 2)
 			toks := strings.SplitN(dateAndTime[1], "Z", 2)
@@ -89,14 +89,14 @@ func (xdt *XSDDateTime) UnmarshalXML(d *xml.Decoder, start xml.StartElement) err
 	if err != nil {
 		return err
 	}
-	xdt.InnerTime, xdt.hasTz, err = fromString(content, time.RFC3339Nano)
+	xdt.InnerTime, xdt.HasTz, err = fromString(content, time.RFC3339Nano)
 	return err
 }
 
 // UnmarshalXMLAttr implements xml.UnmarshalerAttr on XSDDateTime to use time.RFC3339Nano
 func (xdt *XSDDateTime) UnmarshalXMLAttr(attr xml.Attr) error {
 	var err error
-	xdt.InnerTime, xdt.hasTz, err = fromString(attr.Value, time.RFC3339Nano)
+	xdt.InnerTime, xdt.HasTz, err = fromString(attr.Value, time.RFC3339Nano)
 	return err
 }
 
@@ -140,7 +140,7 @@ func fromString(content string, format string) (time.Time, bool, error) {
 func CreateXsdDateTime(dt time.Time, hasTz bool) XSDDateTime {
 	return XSDDateTime{
 		InnerTime: dt,
-		hasTz:     hasTz,
+		HasTz:     hasTz,
 	}
 }
 
